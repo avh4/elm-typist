@@ -3,11 +3,13 @@ module Main (..) where
 import Lessons.TwoLetter
 import Lessons.Letters
 import Html exposing (Html)
-import Html.Events as Html
 import Lesson exposing (Lesson)
 import Keys
 import UI.Lesson
 import String
+import Layout exposing (Layout)
+import Layout.Custom
+import Color
 
 
 type alias Lazy a =
@@ -83,19 +85,25 @@ update action model =
             model
 
 
-view : Signal.Address Action -> Model -> Html
+view : Signal.Address Action -> Model -> Layout
 view address model =
     case model of
         Learning lesson ->
-            UI.Lesson.render lesson
-
-        Celebrating ->
-            Html.text "Good job"
+            Layout.Custom.html (\_ -> UI.Lesson.render lesson)
 
         Choosing lessons ->
             lessons
-                |> List.map (\( name, l ) -> Html.button [ Html.onClick address (ChooseLesson l) ] [ Html.text name ])
-                |> Html.div []
+                |> List.map
+                    (\( name, lesson ) ->
+                        Layout.text { size = 24, color = Color.darkCharcoal } ("Lesson: " ++ name)
+                            |> Layout.onClick (Signal.message address (ChooseLesson lesson))
+                    )
+                |> Layout.list 48
+                |> Layout.center (\{ w, h } -> { w = min 400 w, h = h })
+                |> Layout.inset 48
+
+        _ ->
+            Layout.placeholder (toString model)
 
 
 signals : Signal.Mailbox Action -> Signal Action
@@ -113,3 +121,4 @@ main =
     in
         Signal.foldp update init (signals mbox)
             |> Signal.map (view mbox.address)
+            |> Layout.toFullWindow
