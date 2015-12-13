@@ -1,6 +1,7 @@
 module Main (..) where
 
 import Lessons.Letters
+import Lessons.TwoLetter
 import Html exposing (Html)
 import Html.Attributes as Html
 import Lesson exposing (Lesson)
@@ -13,7 +14,8 @@ type alias Model =
 
 init : Model
 init =
-    Lessons.Letters.lesson [ "a", "s", "e" ]
+    -- Lessons.Letters.lesson [ "a", "s", "e" ]
+    Lessons.TwoLetter.lesson "e" "i"
         |> Lesson.lesson
 
 
