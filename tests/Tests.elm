@@ -5,6 +5,7 @@ import String
 import LessonTests
 import Lessons.LettersTests
 import Lessons.TwoLetterTests
+import UI.LessonTest
 
 
 all : Test
@@ -14,4 +15,5 @@ all =
         [ LessonTests.all
         , Lessons.LettersTests.all
         , Lessons.TwoLetterTests.all
+        , UI.LessonTest.all
         ]

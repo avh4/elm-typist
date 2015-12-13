@@ -1,4 +1,4 @@
-module UI.Lesson (init, key, render) where
+module UI.Lesson (init, key, render, Result(..)) where
 
 import Html exposing (Html)
 import Html.Attributes as Html
@@ -10,23 +10,36 @@ type alias Model =
     Lesson
 
 
+type Result
+    = Completed
+
+
 init : String -> Model
 init lesson =
     lesson
         |> Lesson.lesson
 
 
-key : Keys.KeyCombo -> Model -> Model
+key : Keys.KeyCombo -> Model -> ( Model, Maybe Result )
 key key model =
     case key of
         Keys.Character c ->
-            model |> Lesson.typeLetter c
+            let
+                model' = model |> Lesson.typeLetter c
+            in
+                if Lesson.remaining model' == "" then
+                    ( model', Just Completed )
+                else
+                    ( model', Nothing )
 
         Keys.Single (Keys.Backspace) ->
-            model |> Lesson.backspace
+            model
+                |> Lesson.backspace
+                |> \x -> ( x, Nothing )
 
         _ ->
             Debug.log ("Unknown key: " ++ toString key) model
+                |> \x -> ( x, Nothing )
 
 
 render : Model -> Html

@@ -7,8 +7,9 @@ import Keys
 import UI.Lesson
 
 
-type alias Model =
-    Lesson
+type Model
+    = Learning Lesson
+    | Celebrating
 
 
 init : Model
@@ -16,6 +17,7 @@ init =
     -- Lessons.Letters.lesson [ "a", "s", "e" ]
     Lessons.TwoLetter.lesson "e" "i"
         |> UI.Lesson.init
+        |> Learning
 
 
 type Action
@@ -24,14 +26,27 @@ type Action
 
 update : Action -> Model -> Model
 update action model =
-    case Debug.log "Action" action of
-        Key k ->
-            UI.Lesson.key k model
+    case ( model, Debug.log "Action" action ) of
+        ( Learning lesson, Key k ) ->
+            case UI.Lesson.key k lesson of
+                ( _, Just (UI.Lesson.Completed) ) ->
+                    Celebrating
+
+                ( lesson', Nothing ) ->
+                    Learning lesson'
+
+        ( Celebrating, _ ) ->
+            Celebrating
 
 
 view : Model -> Html
-view l =
-    UI.Lesson.render l
+view model =
+    case model of
+        Learning lesson ->
+            UI.Lesson.render lesson
+
+        Celebrating ->
+            Html.text "Good job"
 
 
 signals : Signal Action
