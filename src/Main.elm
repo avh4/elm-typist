@@ -8,7 +8,6 @@ import Keys
 import UI.Lesson
 import String
 import Layout exposing (Layout)
-import Layout.Custom
 import Color
 
 
@@ -89,7 +88,7 @@ view : Signal.Address Action -> Model -> Layout
 view address model =
     case model of
         Learning lesson ->
-            Layout.Custom.html (\_ -> UI.Lesson.render lesson)
+            UI.Lesson.render lesson
 
         Choosing lessons ->
             lessons

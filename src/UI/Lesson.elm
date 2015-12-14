@@ -4,6 +4,8 @@ import Html exposing (Html)
 import Html.Attributes as Html
 import Lesson exposing (Lesson)
 import Keys
+import Layout exposing (Layout)
+import Layout.Custom
 
 
 type alias Model =
@@ -42,7 +44,7 @@ key key model =
                 |> \x -> ( x, Nothing )
 
 
-render : Model -> Html
+render : Model -> Layout
 render l =
     let
         black = "#111"
@@ -64,17 +66,20 @@ render l =
                 ]
                 [ Html.text t ]
     in
-        Html.div
-            [ Html.style
-                [ ( "width", "100%" )
-                , ( "text-align", "center" )
-                , ( "margin", "24px" )
-                , ( "font-size", "24px" )
-                , ( "white-space", "pre" )
-                ]
-            ]
-            [ Lesson.completed l |> text black
-            , Lesson.wrong l |> textStrike red
-            , spacer
-            , Lesson.remaining l |> text grey
-            ]
+        Layout.bottom 100 (Layout.placeholder <| Lesson.stats l)
+            <| Layout.Custom.html
+            <| \_ ->
+                Html.div
+                    [ Html.style
+                        [ ( "width", "100%" )
+                        , ( "text-align", "center" )
+                        , ( "margin", "24px" )
+                        , ( "font-size", "24px" )
+                        , ( "white-space", "pre" )
+                        ]
+                    ]
+                    [ Lesson.completed l |> text black
+                    , Lesson.wrong l |> textStrike red
+                    , spacer
+                    , Lesson.remaining l |> text grey
+                    ]

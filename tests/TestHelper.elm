@@ -65,3 +65,8 @@ shouldContainTimes n string actual =
 infixl 0 =>
 (=>) =
     (|>)
+
+
+doAll : List (a -> a) -> a -> a
+doAll fns input =
+    List.foldl (<|) input fns

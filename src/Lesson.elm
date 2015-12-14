@@ -1,10 +1,22 @@
-module Lesson (Lesson, lesson, typeLetter, backspace, remaining, completed, wrong) where
+module Lesson (Lesson, lesson, typeLetter, backspace, remaining, completed, wrong, stats) where
 
 import String
+import Dict exposing (Dict)
 
 
 type Lesson
-    = Lesson { text : String, completed : String, wrong : String }
+    = Lesson
+        { text : String
+        , completed : String
+        , wrong : String
+        , stats : Dict String Stats
+        }
+
+
+type alias Stats =
+    { correct : Int
+    , incorrect : Int
+    }
 
 
 
@@ -24,6 +36,7 @@ lesson text =
             { text = first
             , completed = ""
             , wrong = ""
+            , stats = Dict.empty
             }
 
 
@@ -33,15 +46,45 @@ lesson text =
 
 typeLetter : String -> Lesson -> Lesson
 typeLetter input (Lesson l) =
-    if l.wrong == "" && String.startsWith input l.text then
-        Lesson
-            { l
-                | text = String.dropLeft (String.length input) l.text
-                , completed = l.completed ++ input
+    let
+        correct { correct, incorrect } =
+            { correct = correct + 1
+            , incorrect = incorrect
             }
-    else
-        Lesson
-            { l | wrong = l.wrong ++ input }
+
+        incorrect { correct, incorrect } =
+            { correct = correct - 1
+            , incorrect = incorrect + 1
+            }
+
+        track fn s =
+            Dict.update s (Maybe.withDefault { correct = 0, incorrect = 0 } >> fn >> Just)
+    in
+        if l.wrong == "" && String.startsWith input l.text then
+            Lesson
+                { l
+                    | text = String.dropLeft (String.length input) l.text
+                    , completed = l.completed ++ input
+                    , stats =
+                        l.stats
+                            |> track correct input
+                            |> if String.length l.completed > 0 then
+                                track correct (String.right 1 l.completed ++ input)
+                               else
+                                identity
+                }
+        else
+            Lesson
+                { l
+                    | wrong = l.wrong ++ input
+                    , stats =
+                        l.stats
+                            |> track incorrect (String.left 1 l.text)
+                            |> if String.length l.completed > 0 then
+                                track incorrect (String.right 1 l.completed ++ (String.left 1 l.text))
+                               else
+                                identity
+                }
 
 
 backspace : Lesson -> Lesson
@@ -76,3 +119,8 @@ completed (Lesson { completed }) =
 wrong : Lesson -> String
 wrong (Lesson { wrong }) =
     wrong
+
+
+stats : Lesson -> Dict String Stats
+stats (Lesson { stats }) =
+    stats

@@ -2,6 +2,7 @@ module LessonTests (..) where
 
 import TestHelper exposing (..)
 import Lesson exposing (..)
+import Dict
 
 
 all =
@@ -59,4 +60,32 @@ all =
             |> remaining
             => shouldEqual "ABC"
             |> because "backspace over a correct letter should put it back"
+        , lesson "AABA"
+            |> doAll (List.map typeLetter ["A", "A", "B", "A"])
+            |> stats
+            |> Dict.get "A"
+            => shouldEqual (Just { correct = 3, incorrect = 0 })
+            |> because "typeLetter should record correct letters"
+        , lesson "AABA"
+            |> doAll (List.map typeLetter ["A", "X"])
+            |> backspace
+            |> doAll (List.map typeLetter ["A", "B", "A"])
+            |> stats
+            |> Dict.get "A"
+            => shouldEqual (Just { correct = 2, incorrect = 1 })
+            |> because "typeLetter should record incorrect letters"
+        , lesson "BAABA"
+            |> doAll (List.map typeLetter ["B", "A", "A", "B", "A"])
+            |> stats
+            |> Dict.get "BA"
+            => shouldEqual (Just { correct = 2, incorrect = 0 })
+            |> because "typeLetter should record correct sequences"
+        , lesson "BAABA"
+            |> doAll (List.map typeLetter ["B", "X"])
+            |> backspace
+            |> doAll (List.map typeLetter ["A", "A", "B", "A"])
+            |> stats
+            |> Dict.get "BA"
+            => shouldEqual (Just { correct = 1, incorrect = 1 })
+            |> because "typeLetter should record correct sequences"
         ]
