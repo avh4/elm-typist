@@ -4,8 +4,8 @@ import Html exposing (Html)
 import Lesson exposing (Lesson)
 import Keys
 import UI.Lesson
+import UI.Menu
 import Layout exposing (Layout)
-import Color
 import Keyboards.Alphagrip
 import Lazy exposing (Lazy)
 
@@ -58,15 +58,11 @@ view address model =
       UI.Lesson.render lesson
 
     Choosing lessons ->
-      lessons
-        |> List.map
-            (\( name, lesson ) ->
-              Layout.text { size = 24, color = Color.darkCharcoal } ("Lesson: " ++ name)
-                |> Layout.onClick (Signal.message address (ChooseLesson lesson))
-            )
-        |> Layout.list 48
-        |> Layout.center (\{ w, h } -> { w = min 400 w, h = h })
-        |> Layout.inset 48
+      UI.Menu.view
+        address
+        (fst >> (++) "Lesson: ")
+        (snd >> ChooseLesson)
+        lessons
 
     _ ->
       Layout.placeholder (toString model)
