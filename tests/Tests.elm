@@ -10,10 +10,10 @@ import UI.LessonTest
 
 all : Test
 all =
-    suite
-        "elm-typist"
-        [ LessonTests.all
-        , Lessons.LettersTests.all
-        , Lessons.TwoLetterTests.all
-        , UI.LessonTest.all
-        ]
+  suite
+    "elm-typist"
+    [ LessonTests.all
+    , Lessons.LettersTests.all
+    , Lessons.TwoLetterTests.all
+    , UI.LessonTest.all
+    ]
