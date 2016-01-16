@@ -6,25 +6,32 @@ import Keys
 import UI.Lesson
 import UI.Menu
 import Layout exposing (Layout)
+import Keyboards.Keyboard exposing (Keyboard)
 import Keyboards.Alphagrip
+import Keyboards.Qwerty
 import Lazy exposing (Lazy)
 
 
 type Model
   = Learning Lesson
   | Celebrating
-  | Choosing (List ( String, Lazy String ))
+  | ChoosingLesson (List ( String, Lazy String ))
+  | ChoosingKeyboard (List Keyboard)
 
 
 init : Model
 init =
-  Choosing Keyboards.Alphagrip.lessons
+  ChoosingKeyboard
+    [ Keyboard "Alphagrip" Keyboards.Alphagrip.lessons
+    , Keyboard "QWERTY" Keyboards.Qwerty.lessons
+    ]
 
 
 type Action
   = Key Keys.KeyCombo
   | Start
   | ChooseLesson (Lazy String)
+  | ChooseKeyboard Keyboard
 
 
 update : Action -> Model -> Model
@@ -44,10 +51,16 @@ update action model =
     ( Celebrating, _ ) ->
       Celebrating
 
-    ( Choosing _, ChooseLesson l ) ->
+    ( ChoosingLesson _, ChooseLesson l ) ->
       Learning (UI.Lesson.init <| Lazy.force l)
 
-    ( Choosing _, _ ) ->
+    ( ChoosingLesson _, _ ) ->
+      model
+
+    ( ChoosingKeyboard _, ChooseKeyboard keyboard ) ->
+      ChoosingLesson keyboard.lessons
+
+    ( ChoosingKeyboard _, _ ) ->
       model
 
 
@@ -57,12 +70,19 @@ view address model =
     Learning lesson ->
       UI.Lesson.render lesson
 
-    Choosing lessons ->
+    ChoosingLesson lessons ->
       UI.Menu.view
         address
         (fst >> (++) "Lesson: ")
         (snd >> ChooseLesson)
         lessons
+
+    ChoosingKeyboard keyboards ->
+      UI.Menu.view
+        address
+        .name
+        ChooseKeyboard
+        keyboards
 
     _ ->
       Layout.placeholder (toString model)
