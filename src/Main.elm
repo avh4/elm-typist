@@ -4,14 +4,10 @@ import Html exposing (Html)
 import Lesson exposing (Lesson)
 import Keys
 import UI.Lesson
-import String
 import Layout exposing (Layout)
 import Color
 import Keyboards.Alphagrip
-
-
-type alias Lazy a =
-    () -> a
+import Lazy exposing (Lazy)
 
 
 type Model
@@ -49,7 +45,7 @@ update action model =
             Celebrating
 
         ( Choosing _, ChooseLesson l ) ->
-            Learning (UI.Lesson.init (l ()))
+            Learning (UI.Lesson.init <| Lazy.force l)
 
         ( Choosing _, _ ) ->
             model
