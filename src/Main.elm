@@ -1,7 +1,5 @@
 module Main (..) where
 
-import Lessons.TwoLetter
-import Lessons.Letters
 import Html exposing (Html)
 import Lesson exposing (Lesson)
 import Keys
@@ -9,6 +7,7 @@ import UI.Lesson
 import String
 import Layout exposing (Layout)
 import Color
+import Keyboards.Alphagrip
 
 
 type alias Lazy a =
@@ -21,37 +20,9 @@ type Model
     | Choosing (List ( String, Lazy String ))
 
 
-alphagripLessons : List ( String, Lazy String )
-alphagripLessons =
-    let
-        pairedLesson s =
-            let
-                a = String.slice 0 1 s
-
-                b = String.slice 1 2 s
-            in
-                ( a ++ b, \() -> Lessons.TwoLetter.lesson a b )
-
-        letterLessons =
-            [ "tn", "fu", "ei", "so", "ap", "d,", "w.", "qb", "gm", "rh", "vx", "jz" ]
-                |> List.map pairedLesson
-
-        redLessons =
-            [ "12", "34", "56", "78", "90", "++", "-*", "=/", "#$", ".," ]
-                |> List.map pairedLesson
-
-        greenLessons =
-            [ "()", "&|", "{}", "<>", "[]", "`\\", "'?", "%_", "~^", "\"!" ]
-                |> List.map pairedLesson
-
-        topLeftLesson = ( "cykl", \() -> Lessons.Letters.lesson [ "c", "y", "k", "l" ] )
-    in
-        letterLessons ++ [ topLeftLesson ] ++ redLessons ++ greenLessons
-
-
 init : Model
 init =
-    Choosing alphagripLessons
+    Choosing Keyboards.Alphagrip.lessons
 
 
 type Action
