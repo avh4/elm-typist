@@ -57,14 +57,18 @@ update action model =
   case ( model.screen, Debug.log "Action" action ) of
     ( Learning lesson, Key k ) ->
       case UI.Lesson.key k lesson of
-        ( _, Just (UI.Lesson.Completed) ) ->
-          { model
-            | screen = Celebrating
-            , stats =
-                typingStats.put model.stats
-                  |> Result.toMaybe
-                  |> Maybe.withDefault model.stats
-          }
+        ( _, Just (UI.Lesson.Completed stats) ) ->
+          let
+            stats' =
+              Stats.add stats model.stats
+          in
+            { model
+              | screen = Celebrating
+              , stats =
+                  typingStats.put stats'
+                    |> Result.toMaybe
+                    |> Maybe.withDefault stats'
+            }
 
         ( lesson', Nothing ) ->
           { model | screen = Learning lesson' }

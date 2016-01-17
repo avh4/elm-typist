@@ -1,28 +1,75 @@
 module Stats (..) where
 
 import Json.Encode
-import Json.Decode
+import Json.Decode exposing ((:=))
+import Dict exposing (Dict)
+
+
+type alias Stat =
+  { correct : Int
+  , incorrect : Int
+  }
 
 
 type alias Stats =
-  ()
+  Dict String Stat
 
 
 init : Stats
 init =
-  ()
+  Dict.empty
+
+
+add : Stats -> Stats -> Stats
+add a b =
+  let
+    addStat a b =
+      { correct = a.correct + b.correct
+      , incorrect = a.incorrect + b.incorrect
+      }
+  in
+    ((Dict.toList a) ++ (Dict.toList b))
+      |> List.foldl
+          (\( k, v ) ->
+            Dict.update
+              k
+              (Maybe.map (addStat v)
+                >> Maybe.withDefault v
+                >> Just
+              )
+          )
+          init
 
 
 encode : Stats -> Json.Encode.Value
 encode stats =
-  Json.Encode.string "<Stats>"
+  let
+    stat v =
+      Json.Encode.object
+        [ ( "correct", Json.Encode.int v.correct )
+        , ( "incorrect", Json.Encode.int v.incorrect )
+        ]
+  in
+    Dict.toList stats
+      |> List.map
+          (\( k, v ) ->
+            Json.Encode.list
+              [ Json.Encode.string k
+              , stat v
+              ]
+          )
+      |> Json.Encode.list
 
 
 decoder : Json.Decode.Decoder Stats
 decoder =
-  Json.Decode.succeed ()
-
-
-decode : Json.Decode.Value -> Result String Stats
-decode =
-  Json.Decode.decodeValue decoder
+  let
+    stat =
+      Json.Decode.object2
+        Stat
+        ("correct" := Json.Decode.int)
+        ("incorrect" := Json.Decode.int)
+  in
+    Json.Decode.list
+      (Json.Decode.tuple2 (,) Json.Decode.string stat)
+      |> Json.Decode.map Dict.fromList
