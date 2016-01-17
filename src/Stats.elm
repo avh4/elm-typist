@@ -41,6 +41,16 @@ add a b =
           init
 
 
+get : Stats -> String -> Maybe Float
+get stats key =
+  case Dict.get key stats of
+    Nothing ->
+      Nothing
+
+    Just { correct, incorrect } ->
+      Just <| (toFloat correct) / (toFloat (correct + incorrect))
+
+
 encode : Stats -> Json.Encode.Value
 encode stats =
   let

@@ -103,7 +103,12 @@ view address model =
       UI.Lesson.render lesson
 
     ChoosingLesson lessons ->
-      UI.Menu.view address Lesson.name ChooseLesson lessons
+      UI.Menu.percent
+        address
+        Lesson.name
+        ChooseLesson
+        (Lesson.score model.stats)
+        lessons
 
     ChoosingKeyboard keyboards ->
       UI.Menu.view address .name ChooseKeyboard keyboards

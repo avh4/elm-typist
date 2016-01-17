@@ -46,3 +46,4 @@ lesson letters =
         |> List.map (String.join "")
         |> String.join " "
     )
+    letters
