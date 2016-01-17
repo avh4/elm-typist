@@ -7,6 +7,7 @@ import Keys
 import Layout exposing (Layout)
 import Layout.Custom
 import Stats exposing (Stats)
+import Lesson exposing (Lesson)
 
 
 type alias Model =
@@ -17,9 +18,10 @@ type Result
   = Completed Stats
 
 
-init : String -> Model
+init : Lesson -> Model
 init lesson =
   lesson
+    |> Lesson.generate
     |> LessonState.init
 
 
@@ -32,7 +34,7 @@ key key model =
           model |> LessonState.typeLetter c
       in
         if LessonState.remaining model' == "" then
-          ( model', Just <| Completed <| LessonState.stats model')
+          ( model', Just <| Completed <| LessonState.stats model' )
         else
           ( model', Nothing )
 

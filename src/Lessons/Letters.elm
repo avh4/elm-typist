@@ -1,6 +1,7 @@
 module Lessons.Letters (lesson) where
 
 import String
+import Lesson exposing (Lesson)
 
 
 {-| From http://stackoverflow.com/q/24484348/308930
@@ -36,8 +37,12 @@ permutations xs0 =
     xs0 :: perms xs0 []
 
 
-lesson : List String -> String
+lesson : List String -> Lesson
 lesson letters =
-  permutations letters
-    |> List.map (String.join "")
-    |> String.join " "
+  Lesson.lesson
+    ("Lesson: " ++ String.join "" letters)
+    (\_ ->
+      permutations letters
+        |> List.map (String.join "")
+        |> String.join " "
+    )

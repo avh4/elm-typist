@@ -2,10 +2,10 @@ module Keyboards.Qwerty (..) where
 
 import Lessons.TwoLetter
 import String
-import Lazy exposing (Lazy)
+import Lesson exposing (Lesson)
 
 
-lessons : List ( String, Lazy String )
+lessons : List Lesson
 lessons =
   let
     pairedLesson s =
@@ -16,7 +16,7 @@ lessons =
         b =
           String.slice 1 2 s
       in
-        ( a ++ b, Lazy.lazy <| \() -> Lessons.TwoLetter.lesson a b )
+        Lessons.TwoLetter.lesson a b
 
     homeLessons =
       [ "fj", "dk", "sl", "a;", "gh" ]

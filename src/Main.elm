@@ -12,6 +12,7 @@ import Keyboards.Qwerty
 import Lazy exposing (Lazy)
 import Storage.Local as Storage
 import Stats exposing (Stats)
+import Lesson exposing (Lesson)
 
 
 typingStats =
@@ -21,7 +22,7 @@ typingStats =
 type Screen
   = Learning LessonState
   | Celebrating
-  | ChoosingLesson (List ( String, Lazy String ))
+  | ChoosingLesson (List Lesson)
   | ChoosingKeyboard (List Keyboard)
 
 
@@ -48,7 +49,7 @@ init =
 type Action
   = Key Keys.KeyCombo
   | Start
-  | ChooseLesson (Lazy String)
+  | ChooseLesson Lesson
   | ChooseKeyboard Keyboard
 
 
@@ -79,10 +80,10 @@ update action model =
     ( Celebrating, _ ) ->
       { model | screen = Celebrating }
 
-    ( ChoosingLesson _, ChooseLesson l ) ->
+    ( ChoosingLesson _, ChooseLesson lesson ) ->
       { model
         | screen =
-            Learning (UI.Lesson.init <| Lazy.force l)
+            Learning (UI.Lesson.init lesson)
       }
 
     ( ChoosingLesson _, _ ) ->
@@ -102,18 +103,10 @@ view address model =
       UI.Lesson.render lesson
 
     ChoosingLesson lessons ->
-      UI.Menu.view
-        address
-        (fst >> (++) "Lesson: ")
-        (snd >> ChooseLesson)
-        lessons
+      UI.Menu.view address Lesson.name ChooseLesson lessons
 
     ChoosingKeyboard keyboards ->
-      UI.Menu.view
-        address
-        .name
-        ChooseKeyboard
-        keyboards
+      UI.Menu.view address .name ChooseKeyboard keyboards
 
     _ ->
       Layout.placeholder (toString model)

@@ -3,10 +3,10 @@ module Keyboards.Alphagrip (..) where
 import Lessons.TwoLetter
 import Lessons.Letters
 import String
-import Lazy exposing (Lazy)
+import Lesson exposing (Lesson)
 
 
-lessons : List ( String, Lazy String )
+lessons : List Lesson
 lessons =
   let
     pairedLesson s =
@@ -17,7 +17,7 @@ lessons =
         b =
           String.slice 1 2 s
       in
-        ( a ++ b, Lazy.lazy <| \() -> Lessons.TwoLetter.lesson a b )
+        Lessons.TwoLetter.lesson a b
 
     letterLessons =
       [ "tn", "fu", "ei", "so", "ap", "d,", "w.", "qb", "gm", "rh", "vx", "jz" ]
@@ -32,6 +32,6 @@ lessons =
         |> List.map pairedLesson
 
     topLeftLesson =
-      ( "cykl", Lazy.lazy <| \() -> Lessons.Letters.lesson [ "c", "y", "k", "l" ] )
+      Lessons.Letters.lesson [ "c", "y", "k", "l" ]
   in
     letterLessons ++ [ topLeftLesson ] ++ redLessons ++ greenLessons

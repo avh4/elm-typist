@@ -1,9 +1,9 @@
 module Keyboards.Keyboard (..) where
 
-import Lazy exposing (Lazy)
+import Lesson exposing (Lesson)
 
 
 type alias Keyboard =
   { name : String
-  , lessons : List ( String, Lazy String )
+  , lessons : List Lesson
   }
