@@ -6,7 +6,8 @@
     "source-directories": [
         "src",
         "lib/elm-keys",
-        "lib/elm-layout/src/main/elm"
+        "lib/elm-layout/src/main/elm",
+        "lib/elm-storage-local/src"
     ],
     "exposed-modules": [],
     "native-modules": true,
