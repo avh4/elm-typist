@@ -9,7 +9,6 @@ import Layout exposing (Layout)
 import Keyboards.Keyboard exposing (Keyboard)
 import Keyboards.Alphagrip
 import Keyboards.Qwerty
-import Lazy exposing (Lazy)
 import Storage.Local as Storage
 import Stats exposing (Stats)
 import Lesson exposing (Lesson)
@@ -20,9 +19,9 @@ typingStats =
 
 
 type Screen
-  = Learning LessonState
-  | Celebrating
-  | ChoosingLesson (List Lesson)
+  = Learning Keyboard LessonState
+  | Celebrating Keyboard
+  | ChoosingLesson Keyboard
   | ChoosingKeyboard (List Keyboard)
 
 
@@ -56,7 +55,7 @@ type Action
 update : Action -> Model -> Model
 update action model =
   case ( model.screen, Debug.log "Action" action ) of
-    ( Learning lesson, Key k ) ->
+    ( Learning keyboard lesson, Key k ) ->
       case UI.Lesson.key k lesson of
         ( _, Just (UI.Lesson.Completed stats) ) ->
           let
@@ -64,7 +63,7 @@ update action model =
               Stats.add stats model.stats
           in
             { model
-              | screen = Celebrating
+              | screen = Celebrating keyboard
               , stats =
                   typingStats.put stats'
                     |> Result.toMaybe
@@ -72,25 +71,28 @@ update action model =
             }
 
         ( lesson', Nothing ) ->
-          { model | screen = Learning lesson' }
+          { model | screen = Learning keyboard lesson' }
 
-    ( Learning _, _ ) ->
+    ( Learning _ _, _ ) ->
       model
 
-    ( Celebrating, _ ) ->
-      { model | screen = Celebrating }
+    ( Celebrating keyboard, Key (Keys.Single (Keys.Enter))) ->
+      { model | screen = ChoosingLesson keyboard }
 
-    ( ChoosingLesson _, ChooseLesson lesson ) ->
+    ( Celebrating _, _ ) ->
+      model
+
+    ( ChoosingLesson keyboard, ChooseLesson lesson ) ->
       { model
         | screen =
-            Learning (UI.Lesson.init lesson)
+            Learning keyboard (UI.Lesson.init lesson)
       }
 
     ( ChoosingLesson _, _ ) ->
       model
 
     ( ChoosingKeyboard _, ChooseKeyboard keyboard ) ->
-      { model | screen = ChoosingLesson keyboard.lessons }
+      { model | screen = ChoosingLesson keyboard }
 
     ( ChoosingKeyboard _, _ ) ->
       model
@@ -99,16 +101,16 @@ update action model =
 view : Signal.Address Action -> Model -> Layout
 view address model =
   case model.screen of
-    Learning lesson ->
+    Learning _ lesson ->
       UI.Lesson.render lesson
 
-    ChoosingLesson lessons ->
+    ChoosingLesson keyboard ->
       UI.Menu.percent
         address
         Lesson.name
         ChooseLesson
         (Lesson.score model.stats)
-        lessons
+        keyboard.lessons
 
     ChoosingKeyboard keyboards ->
       UI.Menu.view address .name ChooseKeyboard keyboards
