@@ -1,4 +1,4 @@
-module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, square, flow, stack, list, onClick, toHtml, toFullWindow) where
+module Layout (Layout, text, placeholder, image, croppedImage, svg, fill, inset, top, bottom, square, flow, stack, list, onClick, toHtml, toFullWindow, center) where
 
 {-| An experimental alternative to Graphics.Element and elm-html
 
@@ -16,7 +16,7 @@ It also provides a mechanism for creating reusable layout logic.
 
 ## Positioning
 
-@docs inset, top, square
+@docs inset, top, bottom, center, square
 
 ## Lists
 
@@ -51,6 +51,12 @@ type alias Image =
 
 type alias RectangularBounds =
     Custom.RectangularBounds
+
+
+type alias Size =
+    { w : Float
+    , h : Float
+    }
 
 
 {-| A graphical element that will be rendered into a particular bounds at a later time.
@@ -96,12 +102,21 @@ to implement at a later time.
         (Layout.placeholder "header")
         (Layout.placeholder "content")
 -}
-placeholder : String -> Layout
+placeholder : anything -> Layout
 placeholder s =
-    stack
-        [ fill (Color.Hash.fromString s)
-        , text { size = 12, color = Color.darkCharcoal } s
-        ]
+    Custom.html
+        <| div
+            [ ("background-color", "#eee")
+            , ("border", "1px solid #ccc")
+            , ("box-sizing", "border-box")
+            , ("color", "#aaa")
+            , ("text-align", "center")
+            , ("display", "flex")
+            , ("justify-content", "center")
+            , ("flex-direction", "column")
+            ]
+            []
+            [ Html.text <| toString s ]
 
 
 {-| An element that renders text with a given style.
@@ -258,22 +273,53 @@ top ih a b =
                 bounds
 
 
+{-| Position two elements vertically, with the first element taking a given height
+
+    Layout.bottom 50
+        (Layout.placeholder "footer")
+        (Layout.placeholder "content")
+-}
+bottom : Float -> Layout -> Layout -> Layout
+bottom ih a b =
+    Custom.html
+        <| \bounds ->
+            div
+                []
+                []
+                [ Core.toHtml { x = 0, w = bounds.w, y = 0, h = bounds.h - ih } b
+                , Core.toHtml { x = 0, w = bounds.w, y = bounds.h - ih, h = ih } a
+                ]
+                bounds
+
+
+{-| Makes a centered area of a size that is calculated with the given function.
+-}
+center : (Size -> Size) -> Layout -> Layout
+center mapSize =
+    Core.mapBounds
+        <| \bounds ->
+            let
+                { w, h } = mapSize { w = bounds.w, h = bounds.h }
+
+                x = (bounds.w - w) / 2
+
+                y = (bounds.h - h) / 2
+            in
+                Debug.log "center" { x = bounds.x + x, y = bounds.y + y, w = w, h = h }
+
+
 {-| Makes a a centered area with width equal to height
 
     Layout.square (Layout.placeholder "square content")
 -}
 square : Layout -> Layout
 square =
-    Core.mapBounds
-        <| \bounds ->
+    center
+        <| \{ w, h } ->
             let
-                size = min bounds.w bounds.h
-
-                x = (bounds.w - size) / 2
-
-                y = (bounds.h - size) / 2
+                size = min w h
             in
-                { x = x, w = size, y = y, h = size }
+                { w = size, h = size }
 
 
 {-| An element that renders a list of children into bounds of a given size and
@@ -346,7 +392,7 @@ onClick message item =
     Custom.html
         <| \bounds ->
             div
-                []
+                [ ("cursor", "pointer") ]
                 [ Html.on "click" Json.value (\_ -> message) ]
                 [ Core.toHtml { bounds | x = 0, y = 0 } item ]
                 bounds
