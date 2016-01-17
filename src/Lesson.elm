@@ -1,78 +1,39 @@
-module Lesson (Lesson, lesson, typeLetter, backspace, remaining, completed, wrong) where
+module Lesson (..) where
 
-import String
+import Lazy exposing (Lazy)
+import Stats exposing (Stats)
 
 
 type Lesson
-    = Lesson { text : String, completed : String, wrong : String }
+  = Lesson
+      { name : String
+      , generate : Lazy String
+      , focus : List String
+      }
 
 
-
--- INIT
-
-
-lesson : String -> Lesson
-lesson text =
-    let
-        lines = String.lines text
-
-        first = List.head lines |> Maybe.withDefault ""
-
-        rest = List.tail lines
-    in
-        Lesson
-            { text = first
-            , completed = ""
-            , wrong = ""
-            }
+lesson : String -> (() -> String) -> List String -> Lesson
+lesson name generate focus =
+  Lesson
+    { name = name
+    , generate = (Lazy.lazy generate)
+    , focus = focus
+    }
 
 
-
--- UPDATE
-
-
-typeLetter : String -> Lesson -> Lesson
-typeLetter input (Lesson l) =
-    if l.wrong == "" && String.startsWith input l.text then
-        Lesson
-            { l
-                | text = String.dropLeft (String.length input) l.text
-                , completed = l.completed ++ input
-            }
-    else
-        Lesson
-            { l | wrong = l.wrong ++ input }
+name : Lesson -> String
+name (Lesson { name }) =
+  name
 
 
-backspace : Lesson -> Lesson
-backspace (Lesson l) =
-    if String.isEmpty l.wrong then
-        Lesson
-            { l
-                | completed = String.dropRight 1 l.completed
-                , text = String.right 1 l.completed ++ l.text
-            }
-    else
-        Lesson
-            { l
-                | wrong = String.dropRight 1 l.wrong
-            }
+generate : Lesson -> String
+generate (Lesson { generate }) =
+  Lazy.force generate
 
 
-
--- VIEW
-
-
-remaining : Lesson -> String
-remaining (Lesson { text }) =
-    text
-
-
-completed : Lesson -> String
-completed (Lesson { completed }) =
-    completed
-
-
-wrong : Lesson -> String
-wrong (Lesson { wrong }) =
-    wrong
+score : Stats -> Lesson -> Float
+score stats (Lesson { focus }) =
+  focus
+    |> List.filterMap (Stats.get stats)
+    |> List.sum
+    |> (\x -> x / toFloat (List.length focus))

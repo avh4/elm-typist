@@ -9,9 +9,9 @@ import Tests
 
 console : IO ()
 console =
-    ElmTest.consoleRunner Tests.all
+  ElmTest.consoleRunner Tests.all
 
 
 port runner : Signal (Task.Task x ())
 port runner =
-    run console
+  run console

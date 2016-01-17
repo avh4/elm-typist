@@ -1,84 +1,136 @@
 module Main (..) where
 
-import Lessons.Letters
 import Html exposing (Html)
-import Html.Attributes as Html
-import Lesson exposing (Lesson)
+import LessonState exposing (LessonState)
 import Keys
+import UI.Lesson
+import UI.Menu
+import Layout exposing (Layout)
+import Keyboards.Keyboard exposing (Keyboard)
+import Keyboards.Alphagrip
+import Keyboards.Qwerty
+import Lazy exposing (Lazy)
+import Storage.Local as Storage
+import Stats exposing (Stats)
+import Lesson exposing (Lesson)
+
+
+typingStats =
+  Storage.object "typingStats" Stats.encode Stats.decoder
+
+
+type Screen
+  = Learning LessonState
+  | Celebrating
+  | ChoosingLesson (List Lesson)
+  | ChoosingKeyboard (List Keyboard)
 
 
 type alias Model =
-    Lesson
+  { screen : Screen
+  , stats : Stats
+  }
 
 
 init : Model
 init =
-    Lessons.Letters.lesson [ "a", "s", "e" ]
-        |> Lesson.lesson
+  { screen =
+      ChoosingKeyboard
+        [ Keyboard "Alphagrip" Keyboards.Alphagrip.lessons
+        , Keyboard "QWERTY" Keyboards.Qwerty.lessons
+        ]
+  , stats =
+      typingStats.get ()
+        |> Result.toMaybe
+        |> Maybe.withDefault Stats.init
+  }
 
 
 type Action
-    = Key Keys.KeyCombo
+  = Key Keys.KeyCombo
+  | Start
+  | ChooseLesson Lesson
+  | ChooseKeyboard Keyboard
 
 
 update : Action -> Model -> Model
 update action model =
-    case Debug.log "Action" action of
-        Key (Keys.Character c) ->
-            model |> Lesson.typeLetter c
+  case ( model.screen, Debug.log "Action" action ) of
+    ( Learning lesson, Key k ) ->
+      case UI.Lesson.key k lesson of
+        ( _, Just (UI.Lesson.Completed stats) ) ->
+          let
+            stats' =
+              Stats.add stats model.stats
+          in
+            { model
+              | screen = Celebrating
+              , stats =
+                  typingStats.put stats'
+                    |> Result.toMaybe
+                    |> Maybe.withDefault stats'
+            }
 
-        Key (Keys.Single (Keys.Backspace)) ->
-            model |> Lesson.backspace
+        ( lesson', Nothing ) ->
+          { model | screen = Learning lesson' }
 
-        Key k ->
-            Debug.log ("Unknown key: " ++ toString k) model
+    ( Learning _, _ ) ->
+      model
 
+    ( Celebrating, _ ) ->
+      { model | screen = Celebrating }
 
-view : Model -> Html
-view l =
-    let
-        black = "#111"
+    ( ChoosingLesson _, ChooseLesson lesson ) ->
+      { model
+        | screen =
+            Learning (UI.Lesson.init lesson)
+      }
 
-        red = "#c33"
+    ( ChoosingLesson _, _ ) ->
+      model
 
-        grey = "#999"
+    ( ChoosingKeyboard _, ChooseKeyboard keyboard ) ->
+      { model | screen = ChoosingLesson keyboard.lessons }
 
-        spacer = Html.span [] [ Html.text "\x202F" ]
-
-        text c t = Html.span [ Html.style [ ( "color", c ) ] ] [ Html.text t ]
-
-        textStrike c t =
-            Html.span
-                [ Html.style
-                    [ ( "color", c )
-                    , ( "text-decoration", "line-through" )
-                    ]
-                ]
-                [ Html.text t ]
-    in
-        Html.div
-            [ Html.style
-                [ ( "width", "100%" )
-                , ( "text-align", "center" )
-                , ( "margin", "24px" )
-                , ( "font-size", "24px" )
-                , ( "white-space", "pre" )
-                ]
-            ]
-            [ Lesson.completed l |> text black
-            , Lesson.wrong l |> textStrike red
-            , spacer
-            , Lesson.remaining l |> text grey
-            ]
+    ( ChoosingKeyboard _, _ ) ->
+      model
 
 
-signals : Signal Action
-signals =
-    Signal.mergeMany
-        [ Keys.lastPressed |> Signal.map Key ]
+view : Signal.Address Action -> Model -> Layout
+view address model =
+  case model.screen of
+    Learning lesson ->
+      UI.Lesson.render lesson
+
+    ChoosingLesson lessons ->
+      UI.Menu.percent
+        address
+        Lesson.name
+        ChooseLesson
+        (Lesson.score model.stats)
+        lessons
+
+    ChoosingKeyboard keyboards ->
+      UI.Menu.view address .name ChooseKeyboard keyboards
+
+    _ ->
+      Layout.placeholder (toString model)
+
+
+signals : Signal.Mailbox Action -> Signal Action
+signals mbox =
+  Signal.mergeMany
+    [ Keys.lastPressed |> Signal.map Key
+    , mbox.signal
+    ]
 
 
 main : Signal Html
 main =
-    Signal.foldp update init signals
-        |> Signal.map view
+  let
+    mbox =
+      Signal.mailbox Start
+  in
+    Signal.foldp update init (signals mbox)
+      |> Signal.map (view mbox.address)
+      |> Layout.toFullWindow
