@@ -1,11 +1,11 @@
-module Lesson (Lesson, lesson, typeLetter, backspace, remaining, completed, wrong, stats) where
+module LessonState (LessonState, init, typeLetter, backspace, remaining, completed, wrong, stats) where
 
 import String
 import Dict exposing (Dict)
 
 
-type Lesson
-  = Lesson
+type LessonState
+  = LessonState
       { text : String
       , completed : String
       , wrong : String
@@ -23,8 +23,8 @@ type alias Stats =
 -- INIT
 
 
-lesson : String -> Lesson
-lesson text =
+init : String -> LessonState
+init text =
   let
     lines =
       String.lines text
@@ -35,7 +35,7 @@ lesson text =
     rest =
       List.tail lines
   in
-    Lesson
+    LessonState
       { text = first
       , completed = ""
       , wrong = ""
@@ -47,8 +47,8 @@ lesson text =
 -- UPDATE
 
 
-typeLetter : String -> Lesson -> Lesson
-typeLetter input (Lesson l) =
+typeLetter : String -> LessonState -> LessonState
+typeLetter input (LessonState l) =
   let
     correct { correct, incorrect } =
       { correct = correct + 1
@@ -64,7 +64,7 @@ typeLetter input (Lesson l) =
       Dict.update s (Maybe.withDefault { correct = 0, incorrect = 0 } >> fn >> Just)
   in
     if l.wrong == "" && String.startsWith input l.text then
-      Lesson
+      LessonState
         { l
           | text = String.dropLeft (String.length input) l.text
           , completed = l.completed ++ input
@@ -77,7 +77,7 @@ typeLetter input (Lesson l) =
                     identity
         }
     else
-      Lesson
+      LessonState
         { l
           | wrong = l.wrong ++ input
           , stats =
@@ -90,16 +90,16 @@ typeLetter input (Lesson l) =
         }
 
 
-backspace : Lesson -> Lesson
-backspace (Lesson l) =
+backspace : LessonState -> LessonState
+backspace (LessonState l) =
   if String.isEmpty l.wrong then
-    Lesson
+    LessonState
       { l
         | completed = String.dropRight 1 l.completed
         , text = String.right 1 l.completed ++ l.text
       }
   else
-    Lesson
+    LessonState
       { l
         | wrong = String.dropRight 1 l.wrong
       }
@@ -109,21 +109,21 @@ backspace (Lesson l) =
 -- VIEW
 
 
-remaining : Lesson -> String
-remaining (Lesson { text }) =
+remaining : LessonState -> String
+remaining (LessonState { text }) =
   text
 
 
-completed : Lesson -> String
-completed (Lesson { completed }) =
+completed : LessonState -> String
+completed (LessonState { completed }) =
   completed
 
 
-wrong : Lesson -> String
-wrong (Lesson { wrong }) =
+wrong : LessonState -> String
+wrong (LessonState { wrong }) =
   wrong
 
 
-stats : Lesson -> Dict String Stats
-stats (Lesson { stats }) =
+stats : LessonState -> Dict String Stats
+stats (LessonState { stats }) =
   stats

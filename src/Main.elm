@@ -1,7 +1,7 @@
 module Main (..) where
 
 import Html exposing (Html)
-import Lesson exposing (Lesson)
+import LessonState exposing (LessonState)
 import Keys
 import UI.Lesson
 import UI.Menu
@@ -19,7 +19,7 @@ typingStats =
 
 
 type Screen
-  = Learning Lesson
+  = Learning LessonState
   | Celebrating
   | ChoosingLesson (List ( String, Lazy String ))
   | ChoosingKeyboard (List Keyboard)

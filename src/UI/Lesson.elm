@@ -2,7 +2,7 @@ module UI.Lesson (init, key, render, Result(..)) where
 
 import Html exposing (Html)
 import Html.Attributes as Html
-import Lesson exposing (Lesson)
+import LessonState exposing (LessonState)
 import Keys
 import Layout exposing (Layout)
 import Layout.Custom
@@ -10,7 +10,7 @@ import Stats exposing (Stats)
 
 
 type alias Model =
-  Lesson
+  LessonState
 
 
 type Result
@@ -20,7 +20,7 @@ type Result
 init : String -> Model
 init lesson =
   lesson
-    |> Lesson.lesson
+    |> LessonState.init
 
 
 key : Keys.KeyCombo -> Model -> ( Model, Maybe Result )
@@ -29,16 +29,16 @@ key key model =
     Keys.Character c ->
       let
         model' =
-          model |> Lesson.typeLetter c
+          model |> LessonState.typeLetter c
       in
-        if Lesson.remaining model' == "" then
-          ( model', Just <| Completed <| Lesson.stats model')
+        if LessonState.remaining model' == "" then
+          ( model', Just <| Completed <| LessonState.stats model')
         else
           ( model', Nothing )
 
     Keys.Single (Keys.Backspace) ->
       model
-        |> Lesson.backspace
+        |> LessonState.backspace
         |> \x -> ( x, Nothing )
 
     _ ->
@@ -73,7 +73,7 @@ render l =
         ]
         [ Html.text t ]
   in
-    Layout.bottom 100 (Layout.placeholder <| Lesson.stats l)
+    Layout.bottom 100 (Layout.placeholder <| LessonState.stats l)
       <| Layout.Custom.html
       <| \_ ->
           Html.div
@@ -85,8 +85,8 @@ render l =
                 , ( "white-space", "pre" )
                 ]
             ]
-            [ Lesson.completed l |> text black
-            , Lesson.wrong l |> textStrike red
+            [ LessonState.completed l |> text black
+            , LessonState.wrong l |> textStrike red
             , spacer
-            , Lesson.remaining l |> text grey
+            , LessonState.remaining l |> text grey
             ]
